@@ -2,5 +2,10 @@
 name = "commander"
 version = "0.1.0"
 authors = ["tickbh <tickdream125@hotmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+time = "0.1"
 
 [dependencies]
+time = "0.1"
