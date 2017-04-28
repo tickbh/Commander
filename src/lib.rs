@@ -1,4 +1,8 @@
 use std::collections::HashMap;
+use std::fmt;
+use std::env;
+use std::str::FromStr;
+
 
 include!(concat!(env!("OUT_DIR"), "/build_timer.rs"));
 
@@ -9,6 +13,26 @@ enum Value {
     Str(String),
     List(Vec<String>),
 }
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Value::Int(ref i) => write!(f, "{}", i),
+            Value::Float(ref fl) => write!(f, "{}", fl),
+            Value::Str(ref s) => write!(f, "{}", s),
+            Value::List(ref list) => {
+                for (i, v) in list.iter().enumerate() {
+                    if i != 0 {
+                        let _ = write!(f, ", ");
+                    }
+                    let _ = write!(f, "{}", v);
+                }
+                write!(f, "")
+            },
+        }
+    }
+}
+
 
 #[derive(Debug)]
 enum Type {
@@ -39,18 +63,23 @@ impl ArgInfo {
         loop {
             if let Some(v) = chars.next() {
                 if v == '-' {
+                    println!("start!!! cur_find = {:?}", cur_find);
                     if cur_find == 0 {
                         cur_find = 1;
                     } else if cur_find == 1 {
-                        cur_find == 2;
+                        cur_find = 2;
+                        // panic!("aaaaaaaaaaa");
                     }
+                    println!("end!!!!!! cur_find = {:?}", cur_find);
                     cur_str = String::new();
-                } else if v == ' ' {
+                } else if v == ' ' || v == ',' {
+                    println!("cur_find = {:?} cur_str = {:?}", cur_find, cur_str);
                     if cur_find == 2 {
                         long = cur_str;
                     } else if cur_find == 1 {
                         short = cur_str;
                     }
+                    cur_find = 0;
                     cur_str = String::new();
                 } else {
                     cur_str += &v.to_string();
@@ -115,6 +144,116 @@ impl Commander {
         self
     }
 
+    pub fn option(mut self, arg: &str, desc: &str, default: Option<String>) -> Commander {
+        let new_default = default.map(|val| Value::Str(val.clone()));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Str, new_default));
+        self
+    }
+
+    pub fn option_int(mut self, arg: &str, desc: &str, default: Option<i32>) -> Commander {
+        let new_default = default.map(|val| Value::Int(val.clone()));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default));
+        self
+    }
+
+    pub fn option_float(mut self, arg: &str, desc: &str, default: Option<f32>) -> Commander {
+        let new_default = default.map(|val| Value::Float(val.clone()));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default));
+        self
+    }
+
+    pub fn option_list(mut self, arg: &str, desc: &str, default: Option<Vec<String>>) -> Commander {
+        let new_default = default.map(|val| Value::List(val.clone()));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default));
+        self
+    }
+
+    fn try_analyse_commnad(&mut self, command: &String, args: &Vec<String>) {
+            println!("command = {:?}", command);
+            println!("args = {:?}", args);
+        if command.len() == 0 {
+            return;
+        }
+
+
+
+        let mut value: Option<Value> = None;
+        for arg in &self.args {
+            if arg.short == *command || arg.long == *command {
+                match arg.arg_type {
+                    Type::Int => {
+                        if args.len() > 0 {
+                            if let Some(i) = i32::from_str(&args[0]).ok() {
+                                value = Some(Value::Int(i));
+                            }
+                        }
+                    },
+                    Type::Float => {
+                        if args.len() > 0 {
+                            if let Some(f) = f32::from_str(&args[0]).ok() {
+                                value = Some(Value::Float(f));
+                            }
+                        }
+                    },
+                    Type::Str => {
+                        if args.len() > 0 {
+                            value = Some(Value::Str(args[0].clone()));
+                        }
+                    },
+                    Type::List => {
+                        if args.len() > 0 {
+                            value = Some(Value::List(args.clone()));
+                        }
+                    }
+                }
+            }
+        }
+        
+        if value.is_some() {
+            self.values.insert(command.clone(), value.unwrap());
+        }
+    }
+
+    pub fn parse_list(mut self, mut list: Vec<String>) -> Commander {
+        if list.len() > 0 {
+            self.exec = Some(list.remove(0));
+        }
+        let mut command = String::new();
+        let mut args : Vec<String> = vec![];
+        for v in list {
+            let mut new_commnad = None;
+            if v.starts_with("--") || v.starts_with("-") {
+                new_commnad = Some(v.trim_left_matches('-').to_string())
+            } else {
+                args.push(v);
+            }
+
+            if new_commnad.is_some() {
+                self.try_analyse_commnad(&command, &args);
+                command = new_commnad.unwrap();
+                args = vec![];
+            }
+        }
+
+        println!("command = {:?} args = {:?}", command, args);
+
+        if args.len() > 0 {
+            self.try_analyse_commnad(&command, &args);
+        }
+
+        self
+    }
+
+    pub fn parse_env(mut self) -> Commander {
+        let mut args = env::args();
+        let mut list = vec![];
+        for arg in args {
+            list.push(arg.to_string());
+            // println!("args {:?}", arg);    
+        }
+        self.parse_list(list)
+    }
+
     pub fn print_help(&self) {
         let mut help = String::new();
         help += "Usage:";
@@ -129,6 +268,33 @@ impl Commander {
             }
         }
         help += &format!("\n{}\n", self.usage_desc);
+
+        help += &format!("\nOptions:\n");
+        for (_, arg) in self.args.iter().enumerate() {
+            let mut line = String::new();
+            println!("short = {}", arg.short);
+            if arg.short.len() == 0 {
+                line += "      ";
+            } else {
+                line += "  ";
+            }
+
+            line += &arg.arg;
+            for _ in line.len() .. 30 {
+                line += " ";
+            }
+
+            line += &arg.desc;
+
+            if arg.default.is_some() {
+                line += "\t\t default:";
+                line += &format!("{}", arg.default.as_ref().unwrap());
+            }
+
+            line += "\n";
+
+            help += &line;
+        }
 
         println!("{}", help);
     }
