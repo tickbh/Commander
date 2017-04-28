@@ -211,6 +211,14 @@ impl Commander {
             return;
         }
 
+        if command == "h" || command == "help" {
+            self.print_help();
+            ::std::process::exit(0);
+        } else if command == "v" || command == "version" {
+            self.print_version();
+            ::std::process::exit(0);
+        }
+
 
 
         let mut value: Option<Value> = None;
@@ -285,6 +293,17 @@ impl Commander {
             list.push(arg.to_string());
         }
         self.parse_list(list)
+    }
+
+
+    pub fn print_version(&self) {
+        let mut version = String::new();
+        version += "Version:";
+        version += &self.version;
+
+        version += "\nBuild Time:";
+        version += &self.build_time;
+        println!("{}", version);
     }
 
     pub fn print_help(&self) {

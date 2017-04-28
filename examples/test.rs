@@ -16,7 +16,9 @@ fn main() {
                 .parse_list(vec![
                     "test".to_string(), "-c".to_string(), "wwwww".to_string(), 
                     "-d".to_string(), "111111".to_string(), 
-                    "--enum".to_string(), "111".to_string()
+                    "--enum".to_string(), "111".to_string(),
+                    "-h".to_string(),
+                    "-v".to_string(),
                 ])
                 ;
 
