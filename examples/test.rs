@@ -18,9 +18,10 @@ fn main() {
                     "-d".to_string(), "111111".to_string(), 
                     "--enum".to_string(), "111".to_string()
                 ])
-
-
                 ;
+
+    println!("c = {:?}", command.get(&"c".to_string()));
+    println!("d = {:?}", command.get(&"d".to_string()));
+    
     command.print_help();
-    println!("command = {:?}", command);
 }

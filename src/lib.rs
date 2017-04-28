@@ -63,17 +63,13 @@ impl ArgInfo {
         loop {
             if let Some(v) = chars.next() {
                 if v == '-' {
-                    println!("start!!! cur_find = {:?}", cur_find);
                     if cur_find == 0 {
                         cur_find = 1;
                     } else if cur_find == 1 {
                         cur_find = 2;
-                        // panic!("aaaaaaaaaaa");
                     }
-                    println!("end!!!!!! cur_find = {:?}", cur_find);
                     cur_str = String::new();
                 } else if v == ' ' || v == ',' {
-                    println!("cur_find = {:?} cur_str = {:?}", cur_find, cur_str);
                     if cur_find == 2 {
                         long = cur_str;
                     } else if cur_find == 1 {
@@ -144,6 +140,48 @@ impl Commander {
         self
     }
 
+    pub fn get(&self, arg: &String) -> Option<String> {
+        if let Some(v) = self.values.get(arg) {
+            match *v {
+                Value::Str(ref s) => return Some(s.clone()),
+                _ => return None,
+            };
+        }
+        None
+    }
+
+    pub fn get_int(&self, arg: &String) -> Option<i32> {
+        if let Some(v) = self.values.get(arg) {
+            match *v {
+                Value::Int(ref i) => return Some(i.clone()),
+                _ => return None,
+            };
+        }
+        None
+    }
+
+    pub fn get_float(&self, arg: &String) -> Option<f32> {
+        if let Some(v) = self.values.get(arg) {
+            match *v {
+                Value::Float(ref f) => return Some(f.clone()),
+                _ => return None,
+            };
+        }
+        None
+    }
+
+    pub fn get_list(&self, arg: &String) -> Option<Vec<String>> {
+        if let Some(v) = self.values.get(arg) {
+            match *v {
+                Value::List(ref l) => return Some(l.clone()),
+                _ => return None,
+            };
+        }
+        None
+    }
+
+
+
     pub fn option(mut self, arg: &str, desc: &str, default: Option<String>) -> Commander {
         let new_default = default.map(|val| Value::Str(val.clone()));
         self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Str, new_default));
@@ -158,19 +196,17 @@ impl Commander {
 
     pub fn option_float(mut self, arg: &str, desc: &str, default: Option<f32>) -> Commander {
         let new_default = default.map(|val| Value::Float(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Float, new_default));
         self
     }
 
     pub fn option_list(mut self, arg: &str, desc: &str, default: Option<Vec<String>>) -> Commander {
         let new_default = default.map(|val| Value::List(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::List, new_default));
         self
     }
 
     fn try_analyse_commnad(&mut self, command: &String, args: &Vec<String>) {
-            println!("command = {:?}", command);
-            println!("args = {:?}", args);
         if command.len() == 0 {
             return;
         }
@@ -235,8 +271,6 @@ impl Commander {
             }
         }
 
-        println!("command = {:?} args = {:?}", command, args);
-
         if args.len() > 0 {
             self.try_analyse_commnad(&command, &args);
         }
@@ -244,12 +278,11 @@ impl Commander {
         self
     }
 
-    pub fn parse_env(mut self) -> Commander {
-        let mut args = env::args();
+    pub fn parse_env(self) -> Commander {
+        let args = env::args();
         let mut list = vec![];
         for arg in args {
             list.push(arg.to_string());
-            // println!("args {:?}", arg);    
         }
         self.parse_list(list)
     }
@@ -272,7 +305,6 @@ impl Commander {
         help += &format!("\nOptions:\n");
         for (_, arg) in self.args.iter().enumerate() {
             let mut line = String::new();
-            println!("short = {}", arg.short);
             if arg.short.len() == 0 {
                 line += "      ";
             } else {
