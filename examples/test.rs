@@ -11,6 +11,7 @@ fn main() {
                 .option_int("--enum [value]", "enum", None)
                 .option_int("-d, --debug [value]", "debug", Some(123))
                 .option_str("-c, --copy [value]", "拷贝内容", Some("aaa".to_string()))
+                .option("-r", "enable recursive", None)
                 // .parse_list(vec![
                 //     "aatest".to_string(), "-c".to_string(),
                 //     "-d".to_string(), "111111".to_string(), 
@@ -21,8 +22,28 @@ fn main() {
                 .parse_env()
                 ;
 
-    println!("c = {:?}", command.get_str(&"c".to_string()));
-    println!("d = {:?}", command.get_int(&"d".to_string()));
-    
-    command.print_help();
+    if let Some(s) = command.get_str("c") {
+        println!("arg c = {}", s);
+    }
+
+    if let Some(s) = command.get_str("copy") {
+        println!("arg copy = {}", s);
+    }
+
+    if let Some(d) = command.get_int("d") {
+        println!("arg d = {}", d);
+    }
+
+    if let Some(e) = command.get_int("enum") {
+        println!("arg enum = {}", e);
+    }
+
+    if let Some(l) = command.get_list("list") {
+        println!("arg list = {:?}", l);
+    }
+
+    if let Some(r) = command.get("r") {
+        println!("arg r = {}", r);
+    }
+
 }

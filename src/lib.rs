@@ -84,6 +84,13 @@ impl ArgInfo {
                     cur_str += &v.to_string();
                 }
             } else {
+                if cur_str.len() != 0 {
+                    if cur_find == 2 {
+                        long = cur_str;
+                    } else if cur_find == 1 {
+                        short = cur_str;
+                    }
+                }
                 break
             }
         }
@@ -146,8 +153,8 @@ impl Commander {
         self
     }
 
-    pub fn get(&self, arg: &String) -> Option<bool> {
-        if let Some(v) = self.values.get(arg) {
+    pub fn get(&self, arg: &str) -> Option<bool> {
+        if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::Bool(ref b) => return Some(b.clone()),
                 _ => return None,
@@ -156,8 +163,8 @@ impl Commander {
         None
     }
 
-    pub fn get_str(&self, arg: &String) -> Option<String> {
-        if let Some(v) = self.values.get(arg) {
+    pub fn get_str(&self, arg: &str) -> Option<String> {
+        if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::Str(ref s) => return Some(s.clone()),
                 _ => return None,
@@ -166,8 +173,8 @@ impl Commander {
         None
     }
 
-    pub fn get_int(&self, arg: &String) -> Option<i32> {
-        if let Some(v) = self.values.get(arg) {
+    pub fn get_int(&self, arg: &str) -> Option<i32> {
+        if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::Int(ref i) => return Some(i.clone()),
                 _ => return None,
@@ -176,8 +183,8 @@ impl Commander {
         None
     }
 
-    pub fn get_float(&self, arg: &String) -> Option<f32> {
-        if let Some(v) = self.values.get(arg) {
+    pub fn get_float(&self, arg: &str) -> Option<f32> {
+        if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::Float(ref f) => return Some(f.clone()),
                 _ => return None,
@@ -186,8 +193,8 @@ impl Commander {
         None
     }
 
-    pub fn get_list(&self, arg: &String) -> Option<Vec<String>> {
-        if let Some(v) = self.values.get(arg) {
+    pub fn get_list(&self, arg: &str) -> Option<Vec<String>> {
+        if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::List(ref l) => return Some(l.clone()),
                 _ => return None,
@@ -199,6 +206,7 @@ impl Commander {
     pub fn option(mut self, arg: &str, desc: &str, default: Option<bool>) -> Commander {
         let new_default = default.map(|val| Value::Bool(val.clone()));
         self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Bool, new_default));
+        println!("self.args = {:?}", self.args);
         self
     }
 
@@ -238,13 +246,15 @@ impl Commander {
             self.print_version();
             ::std::process::exit(0);
         }
+                println!("command = {:?}",command);
 
-        let mut value: Option<Value> = None;
         for arg in &self.args {
             if arg.short == *command || arg.long == *command {
-                value = arg.default.clone();
+                println!("arg = {:?}", arg);
+                let mut value = arg.default.clone();
                 match arg.arg_type {
                     Type::Bool => {
+                        println!("args = {:?}", args);
                         if args.len() > 0 {
                             if let Some(i) = bool::from_str(&args[0]).ok() {
                                 value = Some(Value::Bool(i));
@@ -252,6 +262,7 @@ impl Commander {
                         } else {
                             value = Some(Value::Bool(true));
                         }
+                        println!("value = {:?}", value);
                     },
                     Type::Int => {
                         if args.len() > 0 {
@@ -278,12 +289,20 @@ impl Commander {
                         }
                     }
                 }
+
+                if value.is_some() {
+                    if arg.short.len() > 0 {
+                        self.values.insert(arg.short.clone(), value.clone().unwrap());
+                    }
+
+                    if arg.long.len() > 0 {
+                        self.values.insert(arg.long.clone(), value.clone().unwrap());
+                    }
+                }
             }
+
         }
         
-        if value.is_some() {
-            self.values.insert(command.clone(), value.unwrap());
-        }
     }
 
     pub fn parse_list(mut self, mut list: Vec<String>) -> Commander {
