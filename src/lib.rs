@@ -6,8 +6,9 @@ use std::str::FromStr;
 
 include!(concat!(env!("OUT_DIR"), "/build_timer.rs"));
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Value {
+    Bool(bool),
     Int(i32),
     Float(f32),
     Str(String),
@@ -17,6 +18,7 @@ enum Value {
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Value::Bool(ref b) => write!(f, "{}", b),
             Value::Int(ref i) => write!(f, "{}", i),
             Value::Float(ref fl) => write!(f, "{}", fl),
             Value::Str(ref s) => write!(f, "{}", s),
@@ -36,6 +38,7 @@ impl fmt::Display for Value {
 
 #[derive(Debug)]
 enum Type {
+    Bool,
     Int,
     Float,
     Str,
@@ -109,7 +112,7 @@ pub struct Commander {
 
 impl Commander {
     pub fn new() -> Commander {
-        Commander {
+        let commander = Commander {
             version: String::new(),
             build_time: get_build_time().to_string(),
             usage: vec![],
@@ -117,7 +120,10 @@ impl Commander {
             exec: None,
             args: vec![],
             values: HashMap::new(),
-        }
+        };
+
+        commander.option("-v, --version", "Output the version", None)
+                 .option("-h, --help", "Output this help info", None)
     }
 
     pub fn version(mut self, version: &str) -> Commander {
@@ -140,7 +146,17 @@ impl Commander {
         self
     }
 
-    pub fn get(&self, arg: &String) -> Option<String> {
+    pub fn get(&self, arg: &String) -> Option<bool> {
+        if let Some(v) = self.values.get(arg) {
+            match *v {
+                Value::Bool(ref b) => return Some(b.clone()),
+                _ => return None,
+            };
+        }
+        None
+    }
+
+    pub fn get_str(&self, arg: &String) -> Option<String> {
         if let Some(v) = self.values.get(arg) {
             match *v {
                 Value::Str(ref s) => return Some(s.clone()),
@@ -180,9 +196,13 @@ impl Commander {
         None
     }
 
+    pub fn option(mut self, arg: &str, desc: &str, default: Option<bool>) -> Commander {
+        let new_default = default.map(|val| Value::Bool(val.clone()));
+        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Bool, new_default));
+        self
+    }
 
-
-    pub fn option(mut self, arg: &str, desc: &str, default: Option<String>) -> Commander {
+    pub fn option_str(mut self, arg: &str, desc: &str, default: Option<String>) -> Commander {
         let new_default = default.map(|val| Value::Str(val.clone()));
         self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Str, new_default));
         self
@@ -219,12 +239,20 @@ impl Commander {
             ::std::process::exit(0);
         }
 
-
-
         let mut value: Option<Value> = None;
         for arg in &self.args {
             if arg.short == *command || arg.long == *command {
+                value = arg.default.clone();
                 match arg.arg_type {
+                    Type::Bool => {
+                        if args.len() > 0 {
+                            if let Some(i) = bool::from_str(&args[0]).ok() {
+                                value = Some(Value::Bool(i));
+                            }
+                        } else {
+                            value = Some(Value::Bool(true));
+                        }
+                    },
                     Type::Int => {
                         if args.len() > 0 {
                             if let Some(i) = i32::from_str(&args[0]).ok() {
@@ -262,10 +290,11 @@ impl Commander {
         if list.len() > 0 {
             self.exec = Some(list.remove(0));
         }
+
         let mut command = String::new();
+        let mut new_commnad = None;
         let mut args : Vec<String> = vec![];
         for v in list {
-            let mut new_commnad = None;
             if v.starts_with("--") || v.starts_with("-") {
                 new_commnad = Some(v.trim_left_matches('-').to_string())
             } else {
@@ -276,10 +305,10 @@ impl Commander {
                 self.try_analyse_commnad(&command, &args);
                 command = new_commnad.unwrap();
                 args = vec![];
+                new_commnad = None;
             }
         }
-
-        if args.len() > 0 {
+        if command.len() > 0 {
             self.try_analyse_commnad(&command, &args);
         }
 
