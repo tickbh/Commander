@@ -30,7 +30,7 @@ use commander::Commander;
 
 fn main() {
     let command = Commander::new()
-                .version("0.0.1")
+                .version(&env!("CARGO_PKG_VERSION").to_string())
                 .usage("test")
                 .usage_desc("Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.")
                 .option_list("-l, --list [value]", "list", Some(vec!["a".to_string(), "b".to_string(), "c".to_string()]))
@@ -38,7 +38,7 @@ fn main() {
                 .option_int("-d, --debug [value]", "debug", Some(123))
                 .option_str("-c, --copy [value]", "copy content", Some("source".to_string()))
                 .option("-r", "enable recursive", None)
-                .parse_env()
+                .parse_env_or_exit()
                 ;
     
     if let Some(s) = command.get_str("c") {
@@ -82,17 +82,18 @@ Usage:./test test
 Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.
 
 Options:
-  -v, --version               Output the version
-  -h, --help                  Output this help info
+  -v, --version               Show the bin version and build time
+  -h, --help                  Show this help message and exit
   -l, --list [value]          list		 default:a, b, c
       --enum [value]          enum
   -d, --debug [value]         debug		 default:123
   -c, --copy [value]          拷贝内容		 default:aaa
+  -r                          enable recursive
 ```
 
 3. ./test -v #it will show version and show build time then exit the program
 ```
-Version:0.0.1
+Version:0.1.1
 Build Time:2017-04-29T14:11:24+08:00
 ``` 
 
