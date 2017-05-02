@@ -17,7 +17,7 @@ commander = "0.1"
 
 ```rust
 extern crate commander;
-use td_rlua::Commander;
+use commander::Commander;
 ```
 
 ## Option parsing
