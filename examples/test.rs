@@ -4,7 +4,7 @@ use commander::Commander;
 
 fn main() {
     let command = Commander::new()
-                .version("0.0.1")
+                .version(&env!("CARGO_PKG_VERSION").to_string())
                 .usage("test")
                 .usage_desc("Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.")
                 .option_list("-l, --list [value]", "list", Some(vec!["a".to_string(), "b".to_string(), "c".to_string()]))
@@ -19,7 +19,7 @@ fn main() {
                 //     // "-v".to_string(),
                 //     // "-h".to_string(),
                 // ])
-                .parse_env()
+                .parse_env_or_exit()
                 ;
 
     if let Some(s) = command.get_str("c") {

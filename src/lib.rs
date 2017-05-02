@@ -129,8 +129,8 @@ impl Commander {
             values: HashMap::new(),
         };
 
-        commander.option("-v, --version", "Output the version", None)
-                 .option("-h, --help", "Output this help info", None)
+        commander.option("-v, --version", "Show the bin version and build time", None)
+                 .option("-h, --help", "Show this help message and exit", None)
     }
 
     pub fn version(mut self, version: &str) -> Commander {
@@ -206,7 +206,6 @@ impl Commander {
     pub fn option(mut self, arg: &str, desc: &str, default: Option<bool>) -> Commander {
         let new_default = default.map(|val| Value::Bool(val.clone()));
         self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Bool, new_default));
-        println!("self.args = {:?}", self.args);
         self
     }
 
@@ -246,15 +245,11 @@ impl Commander {
             self.print_version();
             ::std::process::exit(0);
         }
-                println!("command = {:?}",command);
-
         for arg in &self.args {
             if arg.short == *command || arg.long == *command {
-                println!("arg = {:?}", arg);
                 let mut value = arg.default.clone();
                 match arg.arg_type {
                     Type::Bool => {
-                        println!("args = {:?}", args);
                         if args.len() > 0 {
                             if let Some(i) = bool::from_str(&args[0]).ok() {
                                 value = Some(Value::Bool(i));
@@ -262,7 +257,6 @@ impl Commander {
                         } else {
                             value = Some(Value::Bool(true));
                         }
-                        println!("value = {:?}", value);
                     },
                     Type::Int => {
                         if args.len() > 0 {
@@ -305,7 +299,7 @@ impl Commander {
         
     }
 
-    pub fn parse_list(mut self, mut list: Vec<String>) -> Commander {
+    pub fn parse_list_or_exit(mut self, mut list: Vec<String>) -> Commander {
         if list.len() > 0 {
             self.exec = Some(list.remove(0));
         }
@@ -334,13 +328,13 @@ impl Commander {
         self
     }
 
-    pub fn parse_env(self) -> Commander {
+    pub fn parse_env_or_exit(self) -> Commander {
         let args = env::args();
         let mut list = vec![];
         for arg in args {
             list.push(arg.to_string());
         }
-        self.parse_list(list)
+        self.parse_list_or_exit(list)
     }
 
 
