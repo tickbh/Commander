@@ -20,6 +20,13 @@ extern crate commander;
 use commander::Commander;
 ```
 
+### How to get correct build time
+the build time is the commander build time, if you publish release version, you can exec
+```
+cargo clean -p commander
+```
+first, that you will got right build time
+
 ## Option parsing
 
  Options with commander are defined with the `.option()`,`.option_str()`,`.option_int()`,`.option_float()`,`.option_list()` method. The example below parses args and options from `std::env::args()` or `Vec<String>`, leaving remaining args can get by func `.get()`, `.get_str()`, `.get_int()`, `.get_float()`, `.get_list()`.
