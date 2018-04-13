@@ -5,7 +5,6 @@ authors = ["tickbh <tickdream125@hotmail.com>"]
 description = "The complete solution for Rust command-line interfaces"
 repository = "https://github.com/tickbh/Commander"
 homepage = "https://github.com/tickbh/Commander"
-documentation = "https://github.com/tickbh/Commander"
 license = "MIT/Apache-2.0"
 keywords = ["commander", "command-line"]
 build = "build.rs"
