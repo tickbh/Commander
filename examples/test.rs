@@ -8,19 +8,19 @@ fn main() {
                 .usage("test")
                 .usage_desc("Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.")
                 .option_list("-l, --list [value]", "list", Some(vec!["a".to_string(), "b".to_string(), "c".to_string()]))
-                .option_int("--enum [value]", "enum", None)
-                .option_int("-d, --debug [value]", "debug", Some(123))
-                .option_str("-c, --copy [value]", "拷贝内容", Some("aaa".to_string()))
+                .option_int("--enum value", "enum", None)
+                .option_int("-d, --debug value", "debug", Some(123))
+                .option_str("-c, --copy value", "拷贝内容", Some("aaa".to_string()))
                 .option("-r", "enable recursive", None)
-                // .parse_list(vec![
-                //     "aatest".to_string(), "-c".to_string(),
-                //     "-d".to_string(), "111111".to_string(), 
-                //     "--enum".to_string(), "111".to_string(),
-                //     // "-v".to_string(),
-                //     // "-h".to_string(),
-                // ])
+                .after_desc("\n\nBy default, sparse SOURCE files are detected by a crude heuristic and the \n\
+                            corresponding DEST file is made sparse as well.  That is the behavior      \n\
+                            selected by --sparse=auto.  Specify --sparse=always to create a sparse DEST\n\
+                            file whenever the SOURCE file contains a long enough sequence of zero bytes.\n\
+                            Use --sparse=never to inhibit creation of sparse files.")
                 .parse_env_or_exit()
                 ;
+    
+    println!("current exec = {:?}", command.get_exec().unwrap());
 
     if let Some(s) = command.get_str("c") {
         println!("arg c = {}", s);

@@ -112,6 +112,7 @@ pub struct Commander {
     build_time : String,
     usage: Vec<String>,
     usage_desc: String,
+    after_desc: String,
     exec: Option<String>,
     args: Vec<ArgInfo>,
     values: HashMap<String, Value>,
@@ -124,6 +125,7 @@ impl Commander {
             build_time: get_build_time().to_string(),
             usage: vec![],
             usage_desc: String::new(),
+            after_desc: String::new(),
             exec: None,
             args: vec![],
             values: HashMap::new(),
@@ -151,6 +153,15 @@ impl Commander {
     pub fn usage_desc(mut self, usage_desc: &str) -> Commander {
         self.usage_desc = usage_desc.to_string();
         self
+    }
+
+    pub fn after_desc(mut self, after_desc: &str) -> Commander {
+        self.after_desc = after_desc.to_string();
+        self
+    }
+    
+    pub fn get_exec(&self) -> Option<String> {
+        self.exec.clone()
     }
 
     pub fn get(&self, arg: &str) -> Option<bool> {
@@ -388,6 +399,8 @@ impl Commander {
 
             help += &line;
         }
+
+        help += &self.after_desc;
 
         println!("{}", help);
     }
