@@ -9,8 +9,8 @@ include!(concat!(env!("OUT_DIR"), "/build_timer.rs"));
 #[derive(Debug, Clone)]
 enum Value {
     Bool(bool),
-    Int(i32),
-    Float(f32),
+    Int(i64),
+    Float(f64),
     Str(String),
     List(Vec<String>),
 }
@@ -34,7 +34,6 @@ impl fmt::Display for Value {
         }
     }
 }
-
 
 #[derive(Debug)]
 enum Type {
@@ -184,7 +183,7 @@ impl Commander {
         None
     }
 
-    pub fn get_int(&self, arg: &str) -> Option<i32> {
+    pub fn get_int(&self, arg: &str) -> Option<i64> {
         if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::Int(ref i) => return Some(i.clone()),
@@ -194,7 +193,7 @@ impl Commander {
         None
     }
 
-    pub fn get_float(&self, arg: &str) -> Option<f32> {
+    pub fn get_float(&self, arg: &str) -> Option<f64> {
         if let Some(v) = self.values.get(&arg.to_string()) {
             match *v {
                 Value::Float(ref f) => return Some(f.clone()),
@@ -216,31 +215,76 @@ impl Commander {
 
     pub fn option(mut self, arg: &str, desc: &str, default: Option<bool>) -> Commander {
         let new_default = default.map(|val| Value::Bool(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Bool, new_default));
+        let args = ArgInfo::new(arg.to_string(), desc.to_string(), Type::Bool, new_default.clone());
+        if let Some(s) = new_default {
+            if args.short.len() > 0 {
+                self.values.insert(args.short.clone(), s.clone());
+            }
+            if args.long.len() > 0 {
+                self.values.insert(args.long.clone(), s);
+            }
+        }
+        self.args.push(args);
         self
     }
 
     pub fn option_str(mut self, arg: &str, desc: &str, default: Option<String>) -> Commander {
         let new_default = default.map(|val| Value::Str(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Str, new_default));
+        let args = ArgInfo::new(arg.to_string(), desc.to_string(), Type::Str, new_default.clone());
+        if let Some(s) = new_default {
+            if args.short.len() > 0 {
+                self.values.insert(args.short.clone(), s.clone());
+            }
+            if args.long.len() > 0 {
+                self.values.insert(args.long.clone(), s);
+            }
+        }
+        self.args.push(args);
         self
     }
 
-    pub fn option_int(mut self, arg: &str, desc: &str, default: Option<i32>) -> Commander {
+    pub fn option_int(mut self, arg: &str, desc: &str, default: Option<i64>) -> Commander {
         let new_default = default.map(|val| Value::Int(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default));
+        let args = ArgInfo::new(arg.to_string(), desc.to_string(), Type::Int, new_default.clone());
+        if let Some(s) = new_default {
+            if args.short.len() > 0 {
+                self.values.insert(args.short.clone(), s.clone());
+            }
+            if args.long.len() > 0 {
+                self.values.insert(args.long.clone(), s);
+            }
+        }
+        self.args.push(args);
         self
     }
 
-    pub fn option_float(mut self, arg: &str, desc: &str, default: Option<f32>) -> Commander {
+    pub fn option_float(mut self, arg: &str, desc: &str, default: Option<f64>) -> Commander {
         let new_default = default.map(|val| Value::Float(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::Float, new_default));
+        let args = ArgInfo::new(arg.to_string(), desc.to_string(), Type::Float, new_default.clone());
+        if let Some(s) = new_default {
+            if args.short.len() > 0 {
+                self.values.insert(args.short.clone(), s.clone());
+            }
+            if args.long.len() > 0 {
+                self.values.insert(args.long.clone(), s);
+            }
+        }
+        self.args.push(args);
         self
     }
 
     pub fn option_list(mut self, arg: &str, desc: &str, default: Option<Vec<String>>) -> Commander {
         let new_default = default.map(|val| Value::List(val.clone()));
-        self.args.push(ArgInfo::new(arg.to_string(), desc.to_string(), Type::List, new_default));
+        let args = ArgInfo::new(arg.to_string(), desc.to_string(), Type::List, new_default.clone());
+        if let Some(s) = new_default {
+            if args.short.len() > 0 {
+                self.values.insert(args.short.clone(), s.clone());
+            }
+            if args.long.len() > 0 {
+                self.values.insert(args.long.clone(), s);
+            }
+        }
+        self.args.push(args);
         self
     }
 
@@ -271,15 +315,19 @@ impl Commander {
                     },
                     Type::Int => {
                         if args.len() > 0 {
-                            if let Some(i) = i32::from_str(&args[0]).ok() {
+                            if let Some(i) = i64::from_str(&args[0]).ok() {
                                 value = Some(Value::Int(i));
+                            } else {
+                                eprintln!("Convert {} to int failed", args[0]);
                             }
                         }
                     },
                     Type::Float => {
                         if args.len() > 0 {
-                            if let Some(f) = f32::from_str(&args[0]).ok() {
+                            if let Some(f) = f64::from_str(&args[0]).ok() {
                                 value = Some(Value::Float(f));
+                            } else {
+                                eprintln!("Convert {} to float failed", args[0]);
                             }
                         }
                     },
@@ -320,7 +368,7 @@ impl Commander {
         let mut args : Vec<String> = vec![];
         for v in list {
             if v.starts_with("--") || v.starts_with("-") {
-                new_commnad = Some(v.trim_left_matches('-').to_string())
+                new_commnad = Some(v.trim_start_matches('-').to_string())
             } else {
                 args.push(v);
             }

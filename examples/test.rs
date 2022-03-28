@@ -9,7 +9,8 @@ fn main() {
                 .usage_desc("Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.")
                 .option_list("-l, --list [value]", "list", Some(vec!["a".to_string(), "b".to_string(), "c".to_string()]))
                 .option_int("--enum value", "enum", None)
-                .option_int("-d, --debug value", "debug", Some(123))
+                .option_float("-f, --float value", "debug", Some(12.0))
+                .option_int("-d, --debug value", "debug", Some(124))
                 .option_str("-c, --copy value", "拷贝内容", Some("aaa".to_string()))
                 .option("-r", "enable recursive", None)
                 .after_desc("\n\nBy default, sparse SOURCE files are detected by a crude heuristic and the \n\
@@ -28,6 +29,10 @@ fn main() {
 
     if let Some(s) = command.get_str("copy") {
         println!("arg copy = {}", s);
+    }
+
+    if let Some(f) = command.get_float("f") {
+        println!("arg f = {}", f);
     }
 
     if let Some(d) = command.get_int("d") {

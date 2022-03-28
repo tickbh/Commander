@@ -1,6 +1,6 @@
 [package]
 name = "commander"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["tickbh <tickdream125@hotmail.com>"]
 description = "The complete solution for Rust command-line interfaces"
 repository = "https://github.com/tickbh/Commander"
@@ -10,6 +10,6 @@ keywords = ["commander", "command-line"]
 build = "build.rs"
 
 [build-dependencies]
-time = "0.1"
+chrono = "0.4"
 
 [dependencies]
