@@ -21,6 +21,7 @@ fn main() {
                 ;
     
     println!("current exec = {:?}", command.get_exec().unwrap());
+    println!("current all args = {:?}", command.get_all_args());
 
     if let Some(s) = command.get_str("c") {
         println!("arg c = {}", s);

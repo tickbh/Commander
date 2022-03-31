@@ -116,6 +116,7 @@ pub struct Commander {
     args: Vec<ArgInfo>,
     helps: Vec<String>,
     versions: Vec<String>,
+    all_args: Vec<String>,
     values: HashMap<String, Value>,
 }
 
@@ -131,6 +132,7 @@ impl Commander {
             args: vec![],
             helps: vec!["h".to_string(), "help".to_string()],
             versions: vec!["v".to_string(), "version".to_string()],
+            all_args: vec![],
             values: HashMap::new(),
         };
 
@@ -175,6 +177,10 @@ impl Commander {
     
     pub fn get_exec(&self) -> Option<String> {
         self.exec.clone()
+    }
+
+    pub fn get_all_args(&self) -> Vec<String> {
+        self.all_args.clone()
     }
 
     pub fn get(&self, arg: &str) -> Option<bool> {
@@ -383,6 +389,7 @@ impl Commander {
         if list.len() > 0 {
             self.exec = Some(list.remove(0));
         }
+        self.all_args = list.clone();
 
         let mut command = String::new();
         let mut new_commnad = None;
