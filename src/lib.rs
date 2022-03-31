@@ -114,6 +114,8 @@ pub struct Commander {
     after_desc: String,
     exec: Option<String>,
     args: Vec<ArgInfo>,
+    helps: Vec<String>,
+    versions: Vec<String>,
     values: HashMap<String, Value>,
 }
 
@@ -127,6 +129,8 @@ impl Commander {
             after_desc: String::new(),
             exec: None,
             args: vec![],
+            helps: vec!["h".to_string(), "help".to_string()],
+            versions: vec!["v".to_string(), "version".to_string()],
             values: HashMap::new(),
         };
 
@@ -146,6 +150,16 @@ impl Commander {
 
     pub fn usage(mut self, usage: &str) -> Commander {
         self.usage.push(usage.to_string());
+        self
+    }
+    
+    pub fn helps(mut self, help: Vec<String>) -> Commander {
+        self.helps = help;
+        self
+    }
+
+    pub fn versions(mut self, version: Vec<String>) -> Commander {
+        self.versions = version;
         self
     }
 
@@ -293,13 +307,20 @@ impl Commander {
             return;
         }
 
-        if command == "h" || command == "help" {
-            self.print_help();
-            ::std::process::exit(0);
-        } else if command == "v" || command == "version" {
-            self.print_version();
-            ::std::process::exit(0);
+        for v in &self.versions {
+            if command == v {
+                self.print_version();
+                ::std::process::exit(0);
+            }
         }
+        
+        for h in &self.helps {
+            if command == h {
+                self.print_help();
+                ::std::process::exit(0);
+            }
+        }
+
         for arg in &self.args {
             if arg.short == *command || arg.long == *command {
                 let mut value = arg.default.clone();

@@ -1,5 +1,4 @@
 extern crate commander;
-
 use commander::Commander;
 
 fn main() {
